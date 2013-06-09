@@ -69,8 +69,43 @@ inline TestModule& TestModuleInstance()
     return module;
 }
 
+
+template<typename T>
+struct EqualConstraint
+{
+    EqualConstraint(T expected) : expected(expected)
+    {
+    }
+
+    template<typename A>
+    void Check(const A& actual, int lineNumber) const
+    {
+        if (actual != expected)
+            std::cout << "Line " << lineNumber << ": "
+                      << "Expected: " << expected
+                      << " but was " << actual << "\n";
+    }
+    T expected;
+};
+
+
+struct ConstraintHelper
+{
+    template<typename V>
+    EqualConstraint<V> EqualTo(V value) const
+    {
+        return EqualConstraint<V>(std::move(value));
+    }
+};
+
+
+
 }
 
+namespace
+{
+    const Mint::ConstraintHelper Is;
+}
 
 #define STRINGIZE_I(s) #s
 #define STRINGIZE(s) STRINGIZE_I(s)
@@ -89,5 +124,8 @@ void testcase ::Run()
 
 #define TEST_CASE(fixture, testcase) TEST_CASE_4(fixture, testcase, CREATOR_NAME(testcase), DUMMY_NAME(testcase))
 
+
+#define ASSERT_THAT(actual, constraint) \
+    constraint.Check(actual, __LINE__);
 
 #endif  // MINT_HPP_

@@ -24,6 +24,7 @@ TEST_CASE(StringTest, Concat)
 TEST_CASE(IntTest, Plus)
 {
     int result = 1 + 2;
+    ASSERT_THAT(result, Is.EqualTo(4));
 }
 
 
