@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 #include <iostream>
+#include <algorithm>
 
 namespace Mint
 {
@@ -17,12 +18,13 @@ public:
                   std::function<void(void)> test)
     {
         tests.emplace_back(std::move(testFixtureName),
-                              std::move(testCaseName),
-                              std::move(test));
+                           std::move(testCaseName),
+                           std::move(test));
     }
 
     void Main()
     {        
+        OrderTestsByFixture();
         for(const auto& test : tests)
         {
             std::cout << "Running " <<
@@ -48,6 +50,13 @@ private:
         std::string testCase;
         std::function<void(void)> test;
     };
+
+    void OrderTestsByFixture()
+    {
+        std::sort(begin(tests), end(tests),
+                  [](const TestDefinition& lh, const TestDefinition& rh)
+                  { return lh.testFixture < rh.testFixture ;});
+    }
 
     std::vector<TestDefinition> tests;
 

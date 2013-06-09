@@ -4,30 +4,29 @@
 
 struct IntTest
 {
-    IntTest()
-    {
-        std::cout << "IntTest Setup\n";
-    }
+};
 
-    ~IntTest()
-    {
-        std::cout << "IntTest TearDown\n";
-    }
+TEST_CASE(IntTest, Minus)
+{
+    int result = 3 - 1;
+}
+
+struct StringTest
+{
     std::string text;
 };
 
-
-TEST_CASE(IntTest, Test1)
+TEST_CASE(StringTest, Concat)
 {
-    text += "Test1";
-    std::cout << text << "\n";
+    text = std::string("Hello") + "World";
 }
 
-TEST_CASE(IntTest, Test2)
+TEST_CASE(IntTest, Plus)
 {
-    text += "Test2";
-    std::cout << text << "\n";
+    int result = 1 + 2;
 }
+
+
 
 
 int main()
