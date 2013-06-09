@@ -3,87 +3,53 @@
 
 
 #include <vector>
-#include <memory>
 #include <functional>
-
+#include <iostream>
 
 namespace Mint
 {
 
-class TestReporter
-{
-public:
-};
-
-class TestFixtureBase
-{
-public:
-    virtual ~TestFixtureBase() {}
-    virtual void RunTestCases(TestReporter& report) const = 0;
-};
-
-struct TestCase
-{
-    virtual void Run() = 0;
-    virtual ~TestCase() {}
-};
-
-template<typename Fixture>
-class TestFixture
-{
-public:
-    struct TestCaseRunner
-    {
-        void RunTestCases(TestReporter& report)
-        {
-            for(auto&& testCaseCreator : testCases)
-            {
-                auto testCase = testCaseCreator();
-                testCase->Run();
-            }
-        }
-
-        bool Register(std::function<std::unique_ptr<TestCase>(void)> testCaseCreator)
-        {
-            testCases.push_back(std::move(testCaseCreator));
-            return true;
-        }
-
-        std::vector<std::function<std::unique_ptr<TestCase>(void)> > testCases;
-    };
-
-    static TestCaseRunner& Runner()
-    {
-        static TestCaseRunner test;
-        return test;
-    }
-
-protected:
-
-    TestReporter reporter;
-};
-
-
-
 class TestModule
 {
 public:
-    bool Register(std::function<void(TestReporter&)> fixture)
+    bool Register(std::string testFixtureName,
+                  std::string testCaseName,
+                  std::function<void(void)> test)
     {
-        fixtures.emplace_back(std::move(fixture));
+        tests.emplace_back(std::move(testFixtureName),
+                              std::move(testCaseName),
+                              std::move(test));
     }
 
     void Main()
-    {
-        TestReporter reporter;
-        for(const auto& fixture : fixtures)
+    {        
+        for(const auto& test : tests)
         {
-            fixture(reporter);
+            std::cout << "Running " <<
+                test.testFixture << '.' <<
+                test.testCase << "\n";
+            test.test();
         }
     }
 
 private:
-    std::vector<std::function<void(TestReporter&)>> fixtures;
+    struct TestDefinition
+    {
+        TestDefinition(std::string testFixture,
+                       std::string testCase,
+                       std::function<void(void)> test) :
+            testFixture(std::move(testFixture)),
+            testCase(std::move(testCase)),
+            test(std::move(test))
+        {
+        }
+
+        std::string testFixture;
+        std::string testCase;
+        std::function<void(void)> test;
+    };
+
+    std::vector<TestDefinition> tests;
 
 };
 
@@ -103,10 +69,11 @@ inline TestModule& TestModuleInstance()
 #define CREATOR_NAME(testcase) Create ## testcase
 #define DUMMY_NAME(testcase) dummy ## testcase
 
-#define TEST_CASE_4_(fixture, testcase, creator, dummy) struct testcase : fixture  , Mint::TestCase \
-{ void Run() override; };  \
-inline std::unique_ptr< testcase > creator () { return std::unique_ptr< testcase >(new testcase ); } \
-const bool dummy = fixture ::Runner().Register( creator ); \
+#define TEST_CASE_4_(fixture, testcase, creator, dummy) struct testcase : fixture  \
+{ void Run(); };  \
+namespace {  \
+const bool dummy = Mint::TestModuleInstance().Register(#fixture, #testcase, [](){testcase t; t.Run();}); \
+} \
 void testcase ::Run()
 
 #define TEST_CASE_4(fixture, testcase, creator, dummy) TEST_CASE_4_(fixture, testcase, creator, dummy)
@@ -114,4 +81,4 @@ void testcase ::Run()
 #define TEST_CASE(fixture, testcase) TEST_CASE_4(fixture, testcase, CREATOR_NAME(testcase), DUMMY_NAME(testcase))
 
 
-#endif
+#endif  // MINT_HPP_
