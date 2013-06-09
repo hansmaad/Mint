@@ -96,4 +96,22 @@ inline TestModule& TestModuleInstance()
 
 }
 
+
+#define STRINGIZE_I(s) #s
+#define STRINGIZE(s) STRINGIZE_I(s)
+
+#define CREATOR_NAME(testcase) Create ## testcase
+#define DUMMY_NAME(testcase) dummy ## testcase
+
+#define TEST_CASE_4_(fixture, testcase, creator, dummy) struct testcase : fixture  , Mint::TestCase \
+{ void Run() override; };  \
+inline std::unique_ptr< testcase > creator () { return std::unique_ptr< testcase >(new testcase ); } \
+const bool dummy = fixture ::Runner().Register( creator ); \
+void testcase ::Run()
+
+#define TEST_CASE_4(fixture, testcase, creator, dummy) TEST_CASE_4_(fixture, testcase, creator, dummy)
+
+#define TEST_CASE(fixture, testcase) TEST_CASE_4(fixture, testcase, CREATOR_NAME(testcase), DUMMY_NAME(testcase))
+
+
 #endif

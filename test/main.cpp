@@ -13,19 +13,22 @@ struct IntTest : Mint::TestFixture<IntTest>
     {
         std::cout << "IntTest TearDown\n";
     }
-
+    std::string text;
 };
-
-struct Case2 : Mint::TestCase, IntTest { void Run() override; };
-inline std::unique_ptr<Case2> CreateCase2() { return std::unique_ptr<Case2>(new Case2); }
-const bool d1 = IntTest::Runner().Register(CreateCase2);
-void Case2::Run()
-{
-    std::cout << "Case2\n";
-}
 
 const bool casedummy = Mint::TestModuleInstance().Register([](Mint::TestReporter& r) { IntTest::Runner().RunTestCases(r);});
 
+TEST_CASE(IntTest, Test1)
+{
+    text += "Test1";
+    std::cout << text << "\n";
+}
+
+TEST_CASE(IntTest, Test2)
+{
+    text += "Test2";
+    std::cout << text << "\n";
+}
 
 
 int main()
