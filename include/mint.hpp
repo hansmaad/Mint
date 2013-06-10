@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <string>
 #include <functional>
 #include <iostream>
 #include <algorithm>
@@ -20,6 +21,7 @@ public:
         tests.emplace_back(std::move(testFixtureName),
                            std::move(testCaseName),
                            std::move(test));
+        return true;
     }
 
     void Main()
