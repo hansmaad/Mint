@@ -7,9 +7,43 @@
 #include <functional>
 #include <iostream>
 #include <algorithm>
+#include <sstream>
 
 namespace Mint
 {
+    struct TestDefinition
+    {
+        TestDefinition(std::string testFixture,
+                       std::string testCase,
+                       std::function<void(void)> test) :
+            testFixture(std::move(testFixture)),
+            testCase(std::move(testCase)),
+            test(std::move(test))
+        {
+        }
+
+        std::string testFixture;
+        std::string testCase;
+        std::function<void(void)> test;
+    };
+    
+class TestReport
+{
+public:
+    void RunningTest(const std::string& fixture, const std::string& test)
+    {
+        currentFixture = fixture;
+        currentTest = test;
+    }
+    
+    void Error(const char* file, int lineNumber, std::string msg)
+    {
+   	std::cout << file << " (line " << lineNumber << "): Error in "
+   	    << currentFixture << "." << currentTest  << "  " << msg << "\n";
+    }
+    
+    std::string currentFixture, currentTest;
+};
 
 class TestModule
 {
@@ -29,30 +63,17 @@ public:
         OrderTestsByFixture();
         for(const auto& test : tests)
         {
-            std::cout << "Running " <<
-                test.testFixture << '.' <<
-                test.testCase << "\n";
+            Report().RunningTest( test.testFixture, test.testCase);
             test.test();
         }
     }
 
-private:
-    struct TestDefinition
+    TestReport& Report()
     {
-        TestDefinition(std::string testFixture,
-                       std::string testCase,
-                       std::function<void(void)> test) :
-            testFixture(std::move(testFixture)),
-            testCase(std::move(testCase)),
-            test(std::move(test))
-        {
-        }
-
-        std::string testFixture;
-        std::string testCase;
-        std::function<void(void)> test;
-    };
-
+        return report;
+    }
+    
+private:
     void OrderTestsByFixture()
     {
         std::sort(begin(tests), end(tests),
@@ -61,7 +82,7 @@ private:
     }
 
     std::vector<TestDefinition> tests;
-
+     TestReport report;
 };
 
 
@@ -80,12 +101,18 @@ struct EqualConstraint
     }
 
     template<typename A>
-    void Check(const A& actual, int lineNumber) const
+    bool Check(const A& actual) const
     {
-        if (actual != expected)
-            std::cout << "Line " << lineNumber << ": "
-                      << "Expected: " << expected
-                      << " but was " << actual << "\n";
+        return actual == expected;
+    }
+    
+    template<typename A>
+    std::string WriteMessage(const A& actual) const
+    {
+        std::stringstream msg;
+        msg  << "Expected: " << expected
+                  << " but was " << actual;
+        return msg.str();
     }
     T expected;
 };
@@ -128,6 +155,7 @@ void testcase ::Run()
 
 
 #define ASSERT_THAT(actual, constraint) \
-    constraint.Check(actual, __LINE__);
+    if (!constraint.Check(actual)) \
+      Mint::TestModuleInstance().Report().Error(__FILE__ , __LINE__, constraint.WriteMessage(actual)); 
 
 #endif  // MINT_HPP_

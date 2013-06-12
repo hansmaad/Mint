@@ -2,6 +2,7 @@
 #include <string>
 #include "mint.hpp"
 
+#include <boost/test/unit_test.hpp>
 
 struct IntTest
 {
@@ -10,6 +11,7 @@ struct IntTest
 TEST_CASE(IntTest, Minus)
 {
     int result = 3 - 1;
+    ASSERT_THAT(1, Is.EqualTo(2));
 }
 
 struct StringTest
